@@ -20,6 +20,8 @@ def train_model(model, loss_fn, optimizer, dataloader, n_epochs=100):
     for epoch in range(n_epochs):
         epoch_loss = 0.0
         for batch_x, batch_y in dataloader:
+            batch_x = batch_x.unsqueeze(-1)
+            batch_y = batch_y.unsqueeze(-1)
             optimizer.zero_grad()
             if isinstance(model, MDN):
                 pi, mu, L = model(batch_x)
@@ -50,6 +52,8 @@ def evaluate_model(model, loss_fn, dataloader):
     targets = []
     with torch.no_grad():
         for batch_x, batch_y in dataloader:
+            batch_x = batch_x.unsqueeze(-1)
+            batch_y = batch_y.unsqueeze(-1)
             if isinstance(model, MDN):
                 pi, mu, L = model(batch_x)
                 loss = loss_fn(pi, mu, L, batch_y)

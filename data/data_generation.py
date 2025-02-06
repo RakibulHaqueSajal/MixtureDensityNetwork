@@ -71,15 +71,9 @@ def generate_two_spirals(n_points=1000, noise=0.5, random_seed=42):
     x1 = r * np.cos(theta) + np.random.randn(n_points_per_spiral) * noise
     y1 = r * np.sin(theta) + np.random.randn(n_points_per_spiral) * noise
 
-    # Second spiral: mirror image with a phase shift of pi
-    x2 = r * np.cos(theta + np.pi) + np.random.randn(n_points_per_spiral) * noise
-    y2 = r * np.sin(theta + np.pi) + np.random.randn(n_points_per_spiral) * noise
-
     # Combine the two spirals into one dataset
-    data = np.vstack((np.column_stack((x1, y1)),
-                      np.column_stack((x2, y2))))
+    data = np.vstack((np.column_stack((x1, y1))))
     labels = np.hstack((np.zeros(n_points_per_spiral, dtype=int),
                         np.ones(n_points_per_spiral, dtype=int)))
     
     return data, labels
-

@@ -23,7 +23,7 @@ class GaussianNN_MV(nn.Module):
         )
         self.mu = nn.Linear(hidden_dim, output_dim)
         # Output the parameters for the lower-triangular matrix.
-        self.L_params = nn.Linear(hidden_dim, output_dim * (output_dim + 1) // 2)
+        self.L_params = nn.Linear(hidden_dim, output_dim * (output_dim + 1) // 2) # variance
 
     def forward(self, x):
         h = self.hidden(x)

@@ -25,7 +25,7 @@ def vector_to_lower_triangular(vec, D):
     L[..., tril_indices[0], tril_indices[1]] = vec
     # Exponentiate the diagonal entries to ensure they are positive.
     diag_idx = torch.arange(D, device=vec.device)
-    L[..., diag_idx, diag_idx] = torch.exp(L[..., diag_idx, diag_idx])
+    L[..., diag_idx, diag_idx] = F.softplus(L[..., diag_idx, diag_idx])
     return L
 
 
