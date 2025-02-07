@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 
 
-def mdn_loss(pi, mu, L, y):
+def mdn_loss(pi, mu, L, y, epoch=0):
     """
     Computes the negative log-likelihood loss for a mixture of multivariate Gaussians.
 
@@ -77,4 +77,7 @@ def gaussian_mv_loss(mu, L, y):
     """
     mvn = torch.distributions.MultivariateNormal(loc=mu, scale_tril=L)
     log_prob = mvn.log_prob(y)
+
+    # print determinant of variance
+
     return -torch.mean(log_prob)

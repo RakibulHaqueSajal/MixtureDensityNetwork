@@ -19,12 +19,20 @@ def train_model(model, loss_fn, optimizer, dataloader, n_epochs=100):
     for epoch in range(n_epochs):
         epoch_loss = 0.0
         for batch_x, batch_y in dataloader:
-            batch_x = batch_x.unsqueeze(-1)
-            batch_y = batch_y.unsqueeze(-1)
+            if batch_x.dim() == 1:
+                batch_x = batch_x.unsqueeze(-1)
+            if batch_y.dim() == 1:
+                batch_y = batch_y.unsqueeze(-1)
             optimizer.zero_grad()
             if isinstance(model, MDN):
                 pi, mu, L = model(batch_x)
-                loss = loss_fn(pi, mu, L, batch_y)
+                loss = loss_fn(pi, mu, L, batch_y, epoch)
+
+                pred = torch.sum(pi.unsqueeze(-1) * mu, dim=1)  # Weighted average of the means
+
+                # if epoch > 500:
+                #     print(f"Mean Residuals: (y - pred) = {torch.mean(batch_y - pred, dim=0)}")
+
             elif isinstance(model, GaussianNN_MV):
                 mu, L = model(batch_x)
                 loss = loss_fn(mu, L, batch_y)
@@ -53,12 +61,14 @@ def evaluate_model(model, loss_fn, dataloader):
     
     with torch.no_grad():
         for batch_x, batch_y in dataloader:
-            batch_x = batch_x.unsqueeze(-1)
-            batch_y = batch_y.unsqueeze(-1)
+        
+            if batch_x.dim() == 1:
+                batch_x = batch_x.unsqueeze(-1)
+                batch_y = batch_y.unsqueeze(-1)
             
             if isinstance(model, MDN):
                 pi, mu, L = model(batch_x)
-                loss = loss_fn(pi, mu, L, batch_y)
+                loss = loss_fn(pi, mu, L, batch_y, epoch=0)
                 pred = torch.sum(pi.unsqueeze(-1) * mu, dim=1)  # Weighted average of the means
                 var = torch.sum(pi.unsqueeze(-1) * torch.diagonal(L, dim1=-2, dim2=-1), dim=1)  # Weighted variance # Average variance per sample
                 print(var.shape)

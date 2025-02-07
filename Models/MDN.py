@@ -18,6 +18,8 @@ def vector_to_lower_triangular(vec, D):
     Returns:
         L: Tensor of shape (..., D, D) which is lower triangular with positive diagonal.
     """
+    eps = 1e-6
+
     new_shape = vec.shape[:-1] + (D, D)
     L = torch.zeros(new_shape, device=vec.device, dtype=vec.dtype)
 
@@ -25,7 +27,8 @@ def vector_to_lower_triangular(vec, D):
     L[..., tril_indices[0], tril_indices[1]] = vec
     # Exponentiate the diagonal entries to ensure they are positive.
     diag_idx = torch.arange(D, device=vec.device)
-    L[..., diag_idx, diag_idx] = F.softplus(L[..., diag_idx, diag_idx])
+    L[..., diag_idx, diag_idx] = F.softplus(L[..., diag_idx, diag_idx]) + eps
+
     return L
 
 
@@ -44,9 +47,9 @@ class MDN(nn.Module):
 
         self.hidden = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
-            nn.Tanh(),
+            nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh()
+            nn.ReLU()
         )
         # Mixing coefficients for each component.
         self.pi = nn.Linear(hidden_dim, num_gaussians)

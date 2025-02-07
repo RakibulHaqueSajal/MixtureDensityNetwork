@@ -12,7 +12,9 @@ from data.data_generation import generate_2d_synthetic_data, generate_two_spiral
 from Models.MDN import MDN
 from exp.exp_main import train_model, evaluate_model
 from utils.loss import gaussian_mv_loss, mdn_loss, mdn_mse_loss
-
+from uci_datasets import Dataset
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+import pandas as pd
 
 torch.manual_seed(21)
 np.random.seed(21)
@@ -22,6 +24,36 @@ def generate_data():
     n_samples = 1000
     data = generate_sine_curve(n_points=n_samples)
     return data
+
+def generate_high_dimensional_data():
+    # Load the housing dataset
+    data = pd.read_csv('data/Housing.csv')
+
+    # Convert categorical variables to numerical values
+    label_encoders = {}
+    categorical_columns = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea', 'furnishingstatus']
+    for column in categorical_columns:
+        label_encoders[column] = LabelEncoder()
+        data[column] = label_encoders[column].fit_transform(data[column])
+
+    # Assuming the first column is the target variable
+    target = data.iloc[:, 0].values
+    features = data.iloc[:, 1:].values
+
+    # Normalize the features
+    scaler = StandardScaler()
+    features_normalized = scaler.fit_transform(features)
+
+    # Split the data into training and testing sets
+    x_train, x_test, y_train, y_test = train_test_split(features_normalized, target, test_size=0.2, random_state=42)
+
+    # Convert to PyTorch tensors
+    x_train_tensor = torch.tensor(x_train, dtype=torch.float32)
+    y_train_tensor = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
+    x_test_tensor = torch.tensor(x_test, dtype=torch.float32)
+    y_test_tensor = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
+
+    return x_train_tensor, y_train_tensor, x_test_tensor, y_test_tensor
 
 # Data Preprocessing
 def preprocess_data(data):
@@ -74,12 +106,30 @@ def visualize_results(y_test_tensor, y_test_label, predictions, variances):
     plt.legend()
     plt.show()
 
+def visualize_forest_results(y_test_tensor, y_test_label, predictions, variances):
+    y_test_tensor = y_test_tensor.cpu().detach().numpy()
+    y_test_label = y_test_label.cpu().detach().numpy()
+    predictions = predictions.squeeze()
+    std_dev = np.sqrt(variances.squeeze())  # Convert variance to standard deviation
+
+    # Plot
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_test_label, predictions, label="Predictions", color="blue", alpha=0.6)
+    plt.errorbar(y_test_label, predictions, yerr=std_dev, fmt='o', color='red', alpha=0.3, label="Confidence Interval (±σ)")
+    plt.xlabel("True Labels")
+    plt.ylabel("Predicted Values")
+    plt.title("True Labels vs Predictions with Variance")
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
     # Generate data
     data = generate_data()
     
     # Preprocess data
     x_train_tensor, x_train_label, y_test_tensor, y_test_label = preprocess_data(data)
+
+    # x_train_tensor, x_train_label, y_test_tensor, y_test_label = generate_high_dimensional_data()
     
     # Create DataLoaders
     train_loader, test_loader = create_data_loaders(x_train_tensor, x_train_label, y_test_tensor, y_test_label)
@@ -88,15 +138,15 @@ if __name__ == "__main__":
     input_dim = 1
     hidden_dim = 128
     output_dim = 1
-    num_gaussians = 3
+    num_gaussians = 10
     mdn_model = MDN(input_dim, hidden_dim, output_dim, num_gaussians)
     #mdn_model = GaussianNN_MV(input_dim, hidden_dim, output_dim)
     
     # Train model
-    mdn_optimizer = optim.Adam(mdn_model.parameters(), lr=0.0001)
+    mdn_optimizer = optim.Adam(mdn_model.parameters(), lr=1e-3)
 
     criterion=mdn_loss
-    mdn_model = train_model(mdn_model,criterion, mdn_optimizer, train_loader, n_epochs=800)
+    mdn_model = train_model(mdn_model,criterion, mdn_optimizer, train_loader, n_epochs=100)
     
    # Evaluate model
     mdn_train_loss, mdn_train_rmse, _, _, _ = evaluate_model(mdn_model, criterion, train_loader)
@@ -108,3 +158,4 @@ if __name__ == "__main__":
 
      # Visualize predictions with variance
     visualize_results(y_test_tensor, y_test_label, mdn_preds, variances)
+    # visualize_forest_results(y_test_tensor, y_test_label, mdn_preds, variances)
