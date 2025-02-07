@@ -73,7 +73,30 @@ def generate_two_spirals(n_points=1000, noise=0.5, random_seed=42):
 
     # Combine the two spirals into one dataset
     data = np.vstack((np.column_stack((x1, y1))))
-    labels = np.hstack((np.zeros(n_points_per_spiral, dtype=int),
-                        np.ones(n_points_per_spiral, dtype=int)))
+   
     
-    return data, labels
+    return data
+
+
+# Generate Sine Curve Function
+def generate_sine_curve(n_points=1000, noise=0.1, random_seed=42):
+    """
+    Generates a 2D sine curve dataset.
+
+    Args:
+        n_points (int): Number of data points.
+        noise (float): Standard deviation of Gaussian noise added to the data.
+        random_seed (int): Seed for reproducibility.
+
+    Returns:
+        data (np.ndarray): Generated data points of shape (n_points, 2).
+        labels (np.ndarray): Corresponding sine values with noise.
+    """
+    np.random.seed(random_seed)
+    x = np.linspace(0, 4 * np.pi, n_points)  # Generate x values
+    y = np.sin(x) + np.random.normal(0, noise, n_points)  # Generate noisy sine values
+
+    data = np.column_stack((x, y))
+    
+
+    return data
