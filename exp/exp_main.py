@@ -16,6 +16,8 @@ def train_model(model, loss_fn, optimizer, dataloader, n_epochs=100):
     Depending on the model type, the appropriate forward and loss computations are used.
     """
     model.train()
+    epoch_losses = []
+
     for epoch in range(n_epochs):
         epoch_loss = 0.0
         for batch_x, batch_y in dataloader:
@@ -38,15 +40,16 @@ def train_model(model, loss_fn, optimizer, dataloader, n_epochs=100):
                 loss = loss_fn(mu, L, batch_y)
             elif isinstance(model, DeterministicNN):
                 pred = model(batch_x)
-                loss = F.mse_loss(pred, batch_y)
+                loss = F.mse_loss(pred, batch_y, reduction='mean')
             else:
                 raise ValueError("Unknown model type")
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item() * batch_x.size(0)
         epoch_loss /= len(dataloader.dataset)
+        epoch_losses.append(epoch_loss)
         print(f"Epoch {epoch+1}/{n_epochs}, Loss: {epoch_loss:.4f}")
-    return model
+    return model, epoch_losses
 
 def evaluate_model(model, loss_fn, dataloader):
     """

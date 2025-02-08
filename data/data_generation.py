@@ -1,55 +1,9 @@
 
 import numpy as np 
 
-
-def generate_2d_synthetic_data(n_samples=1000, seed=42):
+def generate_one_spiral(n_points=1000, noise=0.5, random_seed=42):
     """
-    Generates a synthetic 2D dataset from a mixture of three Gaussians.
-    
-    Args:
-        n_samples (int): Total number of samples to generate.
-        seed (int): Random seed for reproducibility.
-    
-    Returns:
-        data (np.ndarray): Generated 2D data points of shape (n_samples, 2).
-        labels (np.ndarray): Component labels for each data point (optional).
-    """
-    np.random.seed(seed)
-    
-    # Define the parameters for three Gaussian components
-    means = np.array([
-        [0, 0],
-        [5, 5],
-        [-5, 5]
-    ])
-    
-    covariances = np.array([
-        [[1.0, 0.8], [0.8, 1.0]],  # Component 1 covariance
-        [[1.0, -0.6], [-0.6, 1.0]],  # Component 2 covariance
-        [[1.0, 0.0], [0.0, 1.0]]    # Component 3 covariance
-    ])
-    
-    # Mixing weights (they should sum to 1)
-    weights = np.array([0.4, 0.4, 0.2])
-    
-    # Choose which component each sample comes from
-    component_choices = np.random.choice(len(weights), size=n_samples, p=weights)
-    
-    # Allocate array for data points and (optionally) labels
-    data = np.zeros((n_samples, 2))
-    labels = np.zeros(n_samples, dtype=int)
-    
-    # Generate data for each sample based on its chosen component
-    for i, comp in enumerate(component_choices):
-        data[i, :] = np.random.multivariate_normal(mean=means[comp], cov=covariances[comp])
-        labels[i] = comp  # Save the label if you want to analyze the mixture components
-    
-    return data, labels
-
-
-def generate_two_spirals(n_points=1000, noise=0.5, random_seed=42):
-    """
-    Generates a 2D two-spirals dataset.
+    Generates a 1D two-spirals dataset.
     
     Args:
         n_points (int): Total number of data points (will be split evenly between the two spirals).
